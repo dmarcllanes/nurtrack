@@ -1944,6 +1944,13 @@ def get(req, submitted: str = ""):
                     ),
                     cls="cat-section",
                 ),
+                # Optional note
+                Div(
+                    Span("Note / Comment", cls="cat-label"),
+                    Textarea(name="comment", id="f-comment", cls="comment-input",
+                             placeholder="Add a note about this expense (optional)...", rows="3"),
+                    cls="cat-section",
+                ),
                 Button("Submit Expense", type="submit", cls="btn btn-primary"),
                 method="post", action="/submit", enctype="multipart/form-data",
             ),
@@ -1975,21 +1982,28 @@ async def post(req):
             except Exception:
                 pass  # photo upload failure shouldn't block the expense save
 
+    comment = (form.get("comment") or "").strip()
+
     try:
-        sb.table("expenses").insert({
+        result = sb.table("expenses").insert({
             "date": date_val, "child": child, "category": category,
             "amount": amount, "image_url": image_url, "status": "Pending",
         }).execute()
     except Exception as e:
         err = str(e)
-        # Missing child column — run: ALTER TABLE expenses ADD COLUMN IF NOT EXISTS child TEXT;
         if "child" in err:
-            sb.table("expenses").insert({
+            result = sb.table("expenses").insert({
                 "date": date_val, "category": category,
                 "amount": amount, "image_url": image_url, "status": "Pending",
             }).execute()
         else:
             raise
+
+    if comment and result.data:
+        expense_id = result.data[0]["id"]
+        sb.table("comments").insert({
+            "expense_id": expense_id, "author": "Mom", "body": comment,
+        }).execute()
 
     return RedirectResponse("/add?submitted=1", status_code=303)
 
