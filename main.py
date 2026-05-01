@@ -685,49 +685,7 @@ h1 {
 }
 .s-done:hover { transform:translateY(-2px); box-shadow:0 7px 30px rgba(0,168,150,.55); }
 
-/* ── Print styles ── */
-@media print {
-  *,*::before,*::after { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-  body {
-    background:#0a0f1e !important; color:#d0e4ec !important;
-    -webkit-font-smoothing:antialiased;
-  }
-  body::before,body::after,#cursor-glow { display:none !important; }
-  .back-nav,.btn-view,.btn-print,.detail-overlay,.detail-sheet,
-  .install-banner,.ios-tip,.view-hero-review { display:none !important; }
-  .page { max-width:100% !important; padding:20px !important; }
-  h1 { font-size:1.4rem !important; -webkit-text-fill-color:#d0e4ec !important; color:#d0e4ec !important; background:none !important; }
-  .subtitle { color:#7a9aad !important; }
-  .stats-bar { grid-template-columns:repeat(4,1fr) !important; gap:8px !important; margin-bottom:16px !important; }
-  .stat-item {
-    background:rgba(0,168,150,.08) !important; border:1px solid rgba(0,168,150,.25) !important;
-    backdrop-filter:none !important;
-  }
-  .stat-label { color:#7a9aad !important; font-size:.65rem !important; }
-  .stat-value,.stat-total { color:#00A896 !important; text-shadow:none !important; font-size:1rem !important; }
-  .expense-grid { grid-template-columns:repeat(2,1fr) !important; gap:10px !important; page-break-inside:avoid; }
-  .expense-card {
-    flex-direction:row !important; padding:12px !important; gap:10px !important;
-    background:rgba(255,255,255,.04) !important; border:1px solid rgba(255,255,255,.1) !important;
-    backdrop-filter:none !important; page-break-inside:avoid; break-inside:avoid;
-  }
-  .thumb,.thumb-ph { width:52px !important; height:52px !important; flex-direction:row !important; border-radius:8px !important; }
-  .thumb img { border-radius:8px !important; }
-  .card-body { padding:0 !important; }
-  .card-amount { font-size:1.1rem !important; color:#00A896 !important; }
-  .card-meta { font-size:.7rem !important; color:#7a9aad !important; }
-  .badge-p { background:rgba(255,160,0,.15) !important; color:#ffb84d !important; }
-  .badge-a { background:rgba(0,168,150,.15) !important; color:#00A896 !important; }
-  .child-tag { background:rgba(0,168,150,.1) !important; color:#00A896 !important; }
-  .card-actions { display:none !important; }
-  .print-header { display:block !important; }
-}
-.print-header {
-  display:none;
-  border-bottom:2px solid rgba(0,168,150,.4); padding-bottom:12px; margin-bottom:20px;
-}
-.print-header-title { font-size:1.1rem; font-weight:700; color:#00A896; }
-.print-header-date  { font-size:.75rem; color:#7a9aad; margin-top:3px; }
+/* ── Print: handled via popup window, no page-level print styles needed ── */
 
 /* ── Install prompt banner ── */
 .install-banner {
@@ -886,6 +844,12 @@ h1 {
   border:1px solid rgba(0,153,204,.25);
 }
 .btn-view:hover { background:rgba(0,153,204,.2); border-color:rgba(0,153,204,.45); }
+.btn-print-card {
+  padding:7px 14px; border-radius:9px; font-size:.78rem;
+  background:rgba(0,168,150,.08); color:#00A896;
+  border:1px solid rgba(0,168,150,.22);
+}
+.btn-print-card:hover { background:rgba(0,168,150,.18); border-color:rgba(0,168,150,.4); }
 
 /* ── Landing page ── */
 .page-landing {
@@ -1517,6 +1481,53 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('click', e => {
     const btn = e.target.closest('.btn-view');
     if (btn) { e.preventDefault(); openSheet(btn); }
+    const pbtn = e.target.closest('.btn-print-card');
+    if (pbtn) {
+      e.preventDefault();
+      const d = pbtn.dataset;
+      const printed = new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+      const imgHTML = d.image
+        ? `<div class="ps-img-wrap"><img src="${d.image}" alt="receipt"></div>` : '';
+      const childRow = d.child
+        ? `<div class="ps-row"><span class="ps-label">Child</span><span class="ps-val">${d.child}</span></div>` : '';
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+        <title>Expense Receipt</title>
+        <style>
+          *{box-sizing:border-box;margin:0;padding:0}
+          body{font-family:system-ui,sans-serif;background:#fff;color:#111;padding:36px}
+          .ps-logo{font-size:1.1rem;font-weight:800;color:#00A896;letter-spacing:.04em;margin-bottom:4px}
+          .ps-subtitle{font-size:.72rem;color:#666;margin-bottom:24px}
+          .ps-amount{font-size:2.4rem;font-weight:800;color:#00A896;margin-bottom:20px}
+          .ps-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #e5e5e5;font-size:.88rem}
+          .ps-label{color:#888}
+          .ps-val{color:#111;font-weight:600}
+          .ps-img-wrap{margin-top:20px;border-radius:12px;overflow:hidden;border:1px solid #e5e5e5}
+          .ps-img-wrap img{width:100%;display:block}
+          .ps-footer{font-size:.68rem;color:#aaa;margin-top:24px;text-align:center}
+          @media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+        </style></head><body>
+        <div class="ps-logo">Nurture·Track</div>
+        <div class="ps-subtitle">Expense Receipt</div>
+        <div class="ps-amount">${d.amount}</div>
+        ${childRow}
+        <div class="ps-row"><span class="ps-label">Category</span><span class="ps-val">${d.caticon} ${d.category}</span></div>
+        <div class="ps-row"><span class="ps-label">Date</span><span class="ps-val">${d.date}</span></div>
+        <div class="ps-row"><span class="ps-label">Status</span><span class="ps-val">${d.status}</span></div>
+        ${imgHTML}
+        <div class="ps-footer">Nurture·Track · Printed ${printed}</div>
+        <script>
+          window.onload=()=>{
+            const img=document.querySelector('.ps-img-wrap img');
+            const doPrint=()=>{window.print();window.onafterprint=()=>window.close();};
+            if(img){img.complete?doPrint():(img.onload=doPrint,img.onerror=doPrint);}
+            else{doPrint();}
+          };
+        <\\/script>
+      </body></html>`;
+      const w = window.open('','_blank','width=520,height=700');
+      w.document.write(html);
+      w.document.close();
+    }
   });
 
   overlay?.addEventListener('click', e => { if (e.target === overlay) closeSheet(); });
@@ -2005,19 +2016,18 @@ def get():
             ) if child else ""
         )
         amount_fmt = f"${float(row['amount']):,.2f}"
-        view_btn = Button(
-            "View", type="button", cls="btn btn-view",
-            **{
-                "data-id":       str(row["id"]),
-                "data-child":    child,
-                "data-category": row["category"],
-                "data-caticon":  CATEGORIES.get(row["category"], "📎"),
-                "data-amount":   amount_fmt,
-                "data-date":     str(row["date"]),
-                "data-status":   status,
-                "data-image":    row.get("image_url") or "",
-            }
-        )
+        card_data = {
+            "data-id":       str(row["id"]),
+            "data-child":    child,
+            "data-category": row["category"],
+            "data-caticon":  CATEGORIES.get(row["category"], "📎"),
+            "data-amount":   amount_fmt,
+            "data-date":     str(row["date"]),
+            "data-status":   status,
+            "data-image":    row.get("image_url") or "",
+        }
+        view_btn  = Button("View",  type="button", cls="btn btn-view",       **card_data)
+        print_btn = Button("🖨 Print", type="button", cls="btn btn-print-card", **card_data)
         cards.append(Div(
             thumb,
             Div(
@@ -2025,7 +2035,7 @@ def get():
                 Div(amount_fmt, cls="card-amount"),
                 P(f"{row['category']} · {row['date']}", cls="card-meta"),
                 Span(status, cls=f"badge {badge_cls}"),
-                Div(view_btn, cls="card-actions"),
+                Div(view_btn, print_btn, cls="card-actions"),
                 cls="card-body",
             ),
             cls="expense-card",
@@ -2041,17 +2051,9 @@ def get():
         Div(
             A("← Home", href="/", cls="back-btn"),
             Span("Review Feed", cls="back-chip"),
-            Button("🖨 Print", type="button", cls="btn btn-sm btn-print",
-                   **{"onclick": "window.print()"},
-                   style="margin-left:auto"),
             cls="back-nav",
         ),
         hero_review,
-        Div(
-            Div("Nurture-Track — Expense Report", cls="print-header-title"),
-            Div(f"Generated {dt_date.today().strftime('%B %-d, %Y')}", cls="print-header-date"),
-            cls="print-header",
-        ),
         H1("Expense Review"),
         P("Audit and acknowledge submitted receipts.", cls="subtitle"),
         stats,
