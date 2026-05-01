@@ -877,14 +877,15 @@ h1 {
 }
 .comment-input:focus { border-color:rgba(0,168,150,.4); }
 .comment-send { width:100%; }
-/* ── Card comment highlight ── */
-.card-comment {
-  display:flex; align-items:flex-start; gap:6px; margin-top:7px;
-  background:rgba(0,168,150,.08); border-left:2px solid #00A896;
-  border-radius:0 8px 8px 0; padding:5px 8px;
+/* ── Card explanation as title ── */
+.card-comment { margin-top:8px; }
+.card-comment-label { display:none; }
+.card-comment-text {
+  font-size:.95rem; font-weight:700; line-height:1.35;
+  background:linear-gradient(90deg,#e0f7f5,#a8edea);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
 }
-.card-comment-icon { font-size:.72rem; flex-shrink:0; margin-top:1px; }
-.card-comment-text { font-size:.74rem; color:var(--t1); line-height:1.45; font-style:italic; }
 
 /* ── Landing page ── */
 .page-landing {
@@ -2118,10 +2119,10 @@ def get():
         comment_preview = ""
         if first:
             author, body = first
-            preview = body if len(body) <= 72 else body[:72] + "…"
+            preview = body if len(body) <= 120 else body[:120] + "…"
             comment_preview = Div(
-                Span("📝", cls="card-comment-icon"),
-                Span(preview, cls="card-comment-text"),
+                Div(Span("📝"), Span("Explanation"), cls="card-comment-label"),
+                Div(preview, cls="card-comment-text"),
                 cls="card-comment",
             )
 
