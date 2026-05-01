@@ -877,6 +877,14 @@ h1 {
 }
 .comment-input:focus { border-color:rgba(0,168,150,.4); }
 .comment-send { width:100%; }
+/* ── Card comment highlight ── */
+.card-comment {
+  display:flex; align-items:flex-start; gap:6px; margin-top:7px;
+  background:rgba(0,168,150,.08); border-left:2px solid #00A896;
+  border-radius:0 8px 8px 0; padding:5px 8px;
+}
+.card-comment-icon { font-size:.72rem; flex-shrink:0; margin-top:1px; }
+.card-comment-text { font-size:.74rem; color:var(--t1); line-height:1.45; font-style:italic; }
 
 /* ── Landing page ── */
 .page-landing {
@@ -1944,11 +1952,11 @@ def get(req, submitted: str = ""):
                     ),
                     cls="cat-section",
                 ),
-                # Optional note
+                # Explanation
                 Div(
-                    Span("Note / Comment", cls="cat-label"),
+                    Span("Explanation", cls="cat-label"),
                     Textarea(name="comment", id="f-comment", cls="comment-input",
-                             placeholder="Add a note about this expense (optional)...", rows="3"),
+                             placeholder="Why is this expense needed? e.g. Hailey's dental checkup at St. Luke's", rows="3"),
                     cls="cat-section",
                 ),
                 Button("Submit Expense", type="submit", cls="btn btn-primary"),
@@ -2067,6 +2075,16 @@ def get():
         cls="view-hero-review",
     )
 
+    # Fetch first comment per expense in one query
+    expense_ids = [str(r["id"]) for r in rows]
+    first_comments: dict = {}
+    if expense_ids:
+        all_comments = sb.table("comments").select("expense_id,body,author").in_("expense_id", expense_ids).order("created_at").execute().data or []
+        for c in all_comments:
+            eid = str(c["expense_id"])
+            if eid not in first_comments:
+                first_comments[eid] = (c["author"], c["body"])
+
     cards = []
     for row in rows:
         thumb = (
@@ -2095,6 +2113,18 @@ def get():
             "data-status":   status,
             "data-image":    row.get("image_url") or "",
         }
+
+        first = first_comments.get(str(row["id"]))
+        comment_preview = ""
+        if first:
+            author, body = first
+            preview = body if len(body) <= 72 else body[:72] + "…"
+            comment_preview = Div(
+                Span("📝", cls="card-comment-icon"),
+                Span(preview, cls="card-comment-text"),
+                cls="card-comment",
+            )
+
         view_btn   = Button("View", type="button", cls="btn btn-view", **card_data)
         export_btn = A("⬇ Excel", href=f"/export/{row['id']}", cls="btn btn-export")
         cards.append(Div(
@@ -2104,6 +2134,7 @@ def get():
                 Div(amount_fmt, cls="card-amount"),
                 P(f"{row['category']} · {row['date']}", cls="card-meta"),
                 Span(status, cls=f"badge {badge_cls}"),
+                comment_preview,
                 Div(view_btn, export_btn, cls="card-actions"),
                 cls="card-body",
             ),
