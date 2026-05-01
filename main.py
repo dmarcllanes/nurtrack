@@ -1,6 +1,6 @@
 from fasthtml.common import *
 from starlette.staticfiles import StaticFiles
-from starlette.responses import Response as StarletteResponse, RedirectResponse
+from starlette.responses import Response as StarletteResponse, RedirectResponse, JSONResponse
 from starlette.middleware.sessions import SessionMiddleware
 
 from supabase import create_client
@@ -450,7 +450,7 @@ h1 {
 .card-body { flex:1; min-width:0; }
 .card-amount { font-size:1.25rem; font-weight:700; color:var(--jade); line-height:1.2; letter-spacing:-.3px; }
 .card-meta { font-size:.77rem; color:var(--t2); margin-top:4px; }
-.card-actions { margin-top:10px; }
+.card-actions { margin-top:10px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
 
 /* ── Badges ── */
 .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:.72rem; font-weight:600; margin-top:6px; }
@@ -774,8 +774,9 @@ h1 {
   transform:translateY(102%);
   transition:transform .4s var(--ease-spring);
   will-change:transform;
+  pointer-events:none;
 }
-.detail-sheet.open { transform:translateY(0); }
+.detail-sheet.open { transform:translateY(0); pointer-events:all; }
 .sheet-handle {
   width:38px; height:4px; border-radius:2px;
   background:rgba(255,255,255,.14); margin:12px auto 0;
@@ -844,12 +845,38 @@ h1 {
   border:1px solid rgba(0,153,204,.25);
 }
 .btn-view:hover { background:rgba(0,153,204,.2); border-color:rgba(0,153,204,.45); }
-.btn-print-card {
+.btn-export {
   padding:7px 14px; border-radius:9px; font-size:.78rem;
   background:rgba(0,168,150,.08); color:#00A896;
-  border:1px solid rgba(0,168,150,.22);
+  border:1px solid rgba(0,168,150,.22); text-decoration:none; display:inline-block;
 }
-.btn-print-card:hover { background:rgba(0,168,150,.18); border-color:rgba(0,168,150,.4); }
+.btn-export:hover { background:rgba(0,168,150,.18); border-color:rgba(0,168,150,.4); }
+/* ── Comments ── */
+.comments-section { border-top:1px solid rgba(255,255,255,.07); padding:16px 20px 20px; }
+.comments-heading { font-size:.72rem; font-weight:700; color:var(--jade); letter-spacing:.07em; text-transform:uppercase; margin-bottom:12px; }
+.comments-list { display:flex; flex-direction:column; gap:8px; max-height:180px; overflow-y:auto; margin-bottom:12px; }
+.comment-bubble { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.06); border-radius:10px; padding:9px 12px; }
+.comment-meta { display:flex; justify-content:space-between; align-items:center; margin-bottom:3px; }
+.comment-author { font-size:.7rem; font-weight:700; }
+.comment-author.mom { color:#ff80c0; }
+.comment-author.dad { color:#00C4E8; }
+.comment-time { font-size:.62rem; color:#4a6a7a; }
+.comment-body { font-size:.83rem; color:var(--t1); line-height:1.45; }
+.comment-empty { font-size:.78rem; color:#4a6a7a; text-align:center; padding:6px 0; }
+.author-toggle { display:flex; gap:6px; margin-bottom:8px; }
+.author-btn {
+  padding:5px 16px; border-radius:20px; font-size:.74rem; font-weight:600;
+  background:rgba(255,255,255,.04); color:#7a9aad;
+  border:1px solid rgba(255,255,255,.1); cursor:pointer; transition:all .18s;
+}
+.author-btn.active { background:rgba(0,168,150,.14); color:#00A896; border-color:rgba(0,168,150,.38); }
+.comment-input {
+  width:100%; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1);
+  border-radius:10px; color:var(--t1); font-size:.83rem; padding:9px 12px;
+  resize:none; outline:none; font-family:inherit; transition:border-color .2s; display:block; margin-bottom:8px;
+}
+.comment-input:focus { border-color:rgba(0,168,150,.4); }
+.comment-send { width:100%; }
 
 /* ── Landing page ── */
 .page-landing {
@@ -1470,63 +1497,76 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay.classList.add('open');
     sheet.classList.add('open');
     document.body.style.overflow = 'hidden';
+
+    // Load comments for this expense
+    currentExpId = d.id;
+    loadComments(d.id);
   }
 
   function closeSheet() {
     overlay.classList.remove('open');
     sheet.classList.remove('open');
     document.body.style.overflow = '';
+    currentExpId = null;
+  }
+
+  // ── Comments ──────────────────────────────────────────────
+  let currentExpId = null;
+  let selectedAuthor = 'Mom';
+
+  function renderComments(comments) {
+    const list = document.getElementById('comments-list');
+    if (!comments.length) {
+      list.innerHTML = '<div class="comment-empty">No comments yet. Start the conversation.</div>';
+      return;
+    }
+    list.innerHTML = comments.map(c => {
+      const cls = c.author === 'Mom' ? 'mom' : 'dad';
+      const t = new Date(c.created_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+      return `<div class="comment-bubble">
+        <div class="comment-meta">
+          <span class="comment-author ${cls}">${c.author}</span>
+          <span class="comment-time">${t}</span>
+        </div>
+        <div class="comment-body">${c.body.replace(/</g,'&lt;')}</div>
+      </div>`;
+    }).join('');
+    list.scrollTop = list.scrollHeight;
+  }
+
+  function loadComments(expId) {
+    fetch(`/comments/${expId}`)
+      .then(r => r.json()).then(renderComments).catch(() => {});
   }
 
   document.addEventListener('click', e => {
     const btn = e.target.closest('.btn-view');
     if (btn) { e.preventDefault(); openSheet(btn); }
-    const pbtn = e.target.closest('.btn-print-card');
-    if (pbtn) {
+
+    const ab = e.target.closest('.author-btn');
+    if (ab) {
+      document.querySelectorAll('.author-btn').forEach(b => b.classList.remove('active'));
+      ab.classList.add('active');
+      selectedAuthor = ab.dataset.author;
+    }
+  });
+
+  document.getElementById('comment-submit')?.addEventListener('click', () => {
+    const input = document.getElementById('comment-input');
+    const body = (input.value || '').trim();
+    if (!body || !currentExpId) return;
+    const fd = new FormData();
+    fd.append('author', selectedAuthor);
+    fd.append('body', body);
+    fetch(`/comments/${currentExpId}`, {method:'POST', body:fd})
+      .then(r => r.json()).then(comments => { renderComments(comments); input.value = ''; })
+      .catch(() => {});
+  });
+
+  document.getElementById('comment-input')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      const d = pbtn.dataset;
-      const printed = new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
-      const imgHTML = d.image
-        ? `<div class="ps-img-wrap"><img src="${d.image}" alt="receipt"></div>` : '';
-      const childRow = d.child
-        ? `<div class="ps-row"><span class="ps-label">Child</span><span class="ps-val">${d.child}</span></div>` : '';
-      const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
-        <title>Expense Receipt</title>
-        <style>
-          *{box-sizing:border-box;margin:0;padding:0}
-          body{font-family:system-ui,sans-serif;background:#fff;color:#111;padding:36px}
-          .ps-logo{font-size:1.1rem;font-weight:800;color:#00A896;letter-spacing:.04em;margin-bottom:4px}
-          .ps-subtitle{font-size:.72rem;color:#666;margin-bottom:24px}
-          .ps-amount{font-size:2.4rem;font-weight:800;color:#00A896;margin-bottom:20px}
-          .ps-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #e5e5e5;font-size:.88rem}
-          .ps-label{color:#888}
-          .ps-val{color:#111;font-weight:600}
-          .ps-img-wrap{margin-top:20px;border-radius:12px;overflow:hidden;border:1px solid #e5e5e5}
-          .ps-img-wrap img{width:100%;display:block}
-          .ps-footer{font-size:.68rem;color:#aaa;margin-top:24px;text-align:center}
-          @media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
-        </style></head><body>
-        <div class="ps-logo">Nurture·Track</div>
-        <div class="ps-subtitle">Expense Receipt</div>
-        <div class="ps-amount">${d.amount}</div>
-        ${childRow}
-        <div class="ps-row"><span class="ps-label">Category</span><span class="ps-val">${d.caticon} ${d.category}</span></div>
-        <div class="ps-row"><span class="ps-label">Date</span><span class="ps-val">${d.date}</span></div>
-        <div class="ps-row"><span class="ps-label">Status</span><span class="ps-val">${d.status}</span></div>
-        ${imgHTML}
-        <div class="ps-footer">Nurture·Track · Printed ${printed}</div>
-        <script>
-          window.onload=()=>{
-            const img=document.querySelector('.ps-img-wrap img');
-            const doPrint=()=>{window.print();window.onafterprint=()=>window.close();};
-            if(img){img.complete?doPrint():(img.onload=doPrint,img.onerror=doPrint);}
-            else{doPrint();}
-          };
-        <\\/script>
-      </body></html>`;
-      const w = window.open('','_blank','width=520,height=700');
-      w.document.write(html);
-      w.document.close();
+      document.getElementById('comment-submit')?.click();
     }
   });
 
@@ -1727,6 +1767,21 @@ def detail_modal():
                 cls="sheet-body",
             ),
             Div(id="sheet-ack-wrap", cls="sheet-actions"),
+            Div(
+                Div("💬 Comments", cls="comments-heading"),
+                Div(id="comments-list", cls="comments-list"),
+                Div(
+                    Div(
+                        Button("Mom", type="button", cls="author-btn active", **{"data-author": "Mom"}),
+                        Button("Dad", type="button", cls="author-btn", **{"data-author": "Dad"}),
+                        cls="author-toggle",
+                    ),
+                    Textarea(id="comment-input", cls="comment-input", placeholder="Add a comment...", rows="2"),
+                    Button("Send", type="button", id="comment-submit", cls="btn btn-primary comment-send"),
+                    cls="comment-form",
+                ),
+                cls="comments-section",
+            ),
             id="detail-sheet", cls="detail-sheet",
         ),
     )
@@ -2026,8 +2081,8 @@ def get():
             "data-status":   status,
             "data-image":    row.get("image_url") or "",
         }
-        view_btn  = Button("View",  type="button", cls="btn btn-view",       **card_data)
-        print_btn = Button("🖨 Print", type="button", cls="btn btn-print-card", **card_data)
+        view_btn   = Button("View", type="button", cls="btn btn-view", **card_data)
+        export_btn = A("⬇ Excel", href=f"/export/{row['id']}", cls="btn btn-export")
         cards.append(Div(
             thumb,
             Div(
@@ -2035,7 +2090,7 @@ def get():
                 Div(amount_fmt, cls="card-amount"),
                 P(f"{row['category']} · {row['date']}", cls="card-meta"),
                 Span(status, cls=f"badge {badge_cls}"),
-                Div(view_btn, print_btn, cls="card-actions"),
+                Div(view_btn, export_btn, cls="card-actions"),
                 cls="card-body",
             ),
             cls="expense-card",
@@ -2070,6 +2125,45 @@ async def post(req):
     if exp_id:
         sb.table("expenses").update({"status": "Acknowledged"}).eq("id", exp_id).execute()
     return RedirectResponse("/review", status_code=303)
+
+
+@rt("/comments/{expense_id}")
+def get(expense_id: str):
+    rows = sb.table("comments").select("*").eq("expense_id", expense_id).order("created_at").execute().data
+    return JSONResponse(rows)
+
+@rt("/comments/{expense_id}")
+async def post(req, expense_id: str):
+    form   = await req.form()
+    author = (form.get("author") or "").strip()
+    body   = (form.get("body") or "").strip()
+    if author and body:
+        sb.table("comments").insert({"expense_id": expense_id, "author": author, "body": body}).execute()
+    rows = sb.table("comments").select("*").eq("expense_id", expense_id).order("created_at").execute().data
+    return JSONResponse(rows)
+
+
+@rt("/export/{expense_id}")
+def get(expense_id: str):
+    from io import BytesIO
+    row = sb.table("expenses").select("*").eq("id", expense_id).single().execute().data
+    df = pl.DataFrame({
+        "Date":        [str(row.get("date", ""))],
+        "Child":       [row.get("child") or ""],
+        "Category":    [row.get("category", "")],
+        "Amount":      [float(row.get("amount", 0))],
+        "Status":      [row.get("status", "")],
+        "Receipt URL": [row.get("image_url") or ""],
+    })
+    buf = BytesIO()
+    df.write_excel(buf)
+    buf.seek(0)
+    filename = f"expense_{row.get('date','unknown')}_{row.get('category','').lower()}.xlsx"
+    return StarletteResponse(
+        content=buf.read(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 serve()
