@@ -421,8 +421,8 @@ h1 {
 .expense-card {
   background:var(--surface);
   backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
-  border:1px solid var(--border); border-radius:var(--r-l); padding:16px;
-  display:flex; gap:14px; align-items:flex-start; margin-bottom:12px;
+  border:1px solid var(--border); border-radius:var(--r-l); padding:20px;
+  display:flex; gap:18px; align-items:flex-start;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 2px 12px rgba(0,0,0,.2);
   transition:transform .3s ease, box-shadow .3s, border-color .3s;
   animation:fadeUp .5s var(--ease-out) backwards;
@@ -462,6 +462,61 @@ h1 {
 }
 
 /* ── Stats bar ── */
+/* ── Dashboard ── */
+.dash { display:flex; flex-direction:column; gap:16px; margin-bottom:28px; }
+.kpi-row { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:14px; }
+@media(min-width:560px){ .kpi-row{ grid-template-columns:repeat(4,1fr); } }
+.kpi-card {
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08);
+  border-radius:14px; padding:14px 16px; position:relative; overflow:hidden;
+  transition:transform .22s, box-shadow .22s; cursor:default;
+}
+.kpi-card:hover { transform:translateY(-2px); box-shadow:0 8px 22px rgba(0,0,0,.28); }
+.kpi-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg,#00C4B4,#00A896);
+}
+.kpi-icon { font-size:1rem; margin-bottom:5px; display:block; }
+.kpi-val { font-size:1.35rem; font-weight:800; letter-spacing:-.5px; line-height:1; }
+.kpi-val.teal  { color:#00C4B4; }
+.kpi-val.amber { color:#ffb84d; }
+.kpi-val.blue  { color:#00C4E8; }
+.kpi-val.green { color:#00A896; }
+.kpi-label { font-size:.6rem; color:var(--t2); margin-top:5px; text-transform:uppercase; letter-spacing:.07em; font-weight:600; }
+.kpi-sub { font-size:.65rem; color:#00A896; font-weight:600; margin-top:2px; }
+.chart-row { display:grid; grid-template-columns:1fr; gap:16px; }
+@media(min-width:640px){ .chart-row-2 { grid-template-columns:1fr 1fr; } }
+.chart-card {
+  background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.07);
+  border-radius:18px; padding:20px 22px;
+}
+.chart-title {
+  font-size:.67rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
+  color:#00A896; margin-bottom:16px; display:flex; align-items:center; gap:7px;
+}
+.chart-title span { opacity:.5; font-weight:400; font-size:.9em; text-transform:none; letter-spacing:0; }
+/* ── Tabs ── */
+.tab-bar {
+  display:flex; gap:6px; padding:5px;
+  background:rgba(9,14,28,.92); border:1px solid rgba(255,255,255,.08);
+  border-radius:14px; margin-bottom:20px;
+  position:sticky; top:0; z-index:90;
+  backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+}
+.tab-btn {
+  flex:1; padding:9px 10px; border-radius:10px; font-size:.78rem; font-weight:700;
+  color:var(--t2); background:transparent; border:none; cursor:pointer;
+  transition:all .22s; letter-spacing:.02em; white-space:nowrap;
+}
+.tab-btn:hover { color:var(--t1); background:rgba(255,255,255,.05); }
+.tab-btn.active {
+  background:linear-gradient(135deg,rgba(0,196,180,.2),rgba(0,168,150,.12));
+  color:#00C4B4; border:1px solid rgba(0,196,180,.3);
+  box-shadow:0 2px 12px rgba(0,168,150,.15);
+}
+.tab-panel { display:none; }
+.tab-panel.active { display:block; animation:fadeUp .3s var(--ease-out); }
+.chart-card canvas { min-height:200px; }
 .stats-bar { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-bottom:24px; }
 .stat-item {
   padding:16px 18px; cursor:default;
@@ -479,7 +534,7 @@ h1 {
 .stat-total { color:var(--jade); text-shadow:0 0 16px rgba(0,168,150,.35); }
 
 /* ── Cards grid ── */
-.expense-grid { display:grid; grid-template-columns:1fr; gap:12px; }
+.expense-grid { display:grid; grid-template-columns:1fr; gap:16px; }
 
 /* ── Empty state ── */
 .empty { text-align:center; padding:64px 0; color:var(--t2); font-size:.9rem; animation:fadeUp .5s var(--ease-out); }
@@ -503,26 +558,27 @@ h1 {
 
 /* ── Tablet 640px ── */
 @media(min-width:640px){
-  .page { max-width:720px; padding:32px 24px; }
+  .page { max-width:768px; padding:28px 24px; }
   h1 { font-size:1.75rem; }
   .form-wrap { max-width:560px; margin:0 auto; }
-  .expense-grid { grid-template-columns:1fr 1fr; gap:14px; }
-  .expense-card { padding:18px; }
-  .thumb, .thumb-ph { width:76px; height:76px; }
+  .expense-grid { grid-template-columns:1fr 1fr; gap:16px; }
+  .expense-card { padding:18px; gap:16px; }
+  .thumb, .thumb-ph { width:74px; height:74px; }
   .cat-grid { grid-template-columns:repeat(6,1fr); }
+  .chart-row-2 { grid-template-columns:1fr 1fr; }
+  .kpi-row { grid-template-columns:repeat(4,1fr); }
+  .view-hero-review { flex-wrap:nowrap; }
 }
 
 /* ── Desktop 1024px ── */
 @media(min-width:1024px){
-  .page { max-width:1200px; padding:0 48px 56px; }
-  h1 { font-size:2rem; }
-
-  /* Sticky glass nav bar */
+  .page { max-width:1100px; padding:0 40px 56px; }
+  h1 { font-size:1.9rem; }
   .nav-wrap {
     position:sticky; top:0; z-index:100;
     display:flex; align-items:center; justify-content:space-between;
-    margin:0 -48px 44px; padding:18px 48px;
-    background:rgba(7,13,25,.8);
+    margin:0 -40px 40px; padding:16px 40px;
+    background:rgba(7,13,25,.85);
     backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
     border-bottom:1px solid var(--border);
   }
@@ -541,36 +597,20 @@ h1 {
   }
   .nav { gap:6px; margin-bottom:0; }
   .nav a { flex:none; padding:9px 22px; }
-
-  /* Add form: centered */
   .form-wrap { max-width:560px; }
-
-  /* Review: 3-col photo cards */
-  .expense-grid { grid-template-columns:repeat(3,1fr); gap:18px; }
-  .expense-card {
-    flex-direction:column; padding:0; gap:0; overflow:hidden; margin-bottom:0;
-    perspective:800px;
-  }
-  .thumb {
-    width:100%; height:160px; border-radius:var(--r-l) var(--r-l) 0 0;
-    border:none; border-bottom:1px solid var(--border);
-  }
-  .thumb img { height:100%; }
-  .thumb-ph {
-    width:100%; height:160px; border-radius:var(--r-l) var(--r-l) 0 0;
-    border:none; border-bottom:1px dashed rgba(0,168,150,.15); font-size:2.4rem;
-  }
-  .card-body { padding:16px 18px 18px; }
-  .card-amount { font-size:1.35rem; }
+  .expense-grid { grid-template-columns:repeat(3,1fr); gap:20px; }
+  .expense-card { padding:20px; gap:16px; }
+  .thumb, .thumb-ph { width:80px; height:80px; }
+  .card-amount { font-size:1.3rem; }
   .stat-value { font-size:1.25rem; }
   .stat-item { padding:18px 22px; }
 }
 
 /* ── Large 1400px ── */
 @media(min-width:1400px){
-  .page { max-width:1440px; padding:0 64px 64px; }
-  .nav-wrap { margin:0 -64px 48px; padding-left:64px; padding-right:64px; }
-  .expense-grid { grid-template-columns:repeat(4,1fr); }
+  .page { max-width:1320px; padding:0 56px 64px; }
+  .nav-wrap { margin:0 -56px 44px; padding-left:56px; padding-right:56px; }
+  .expense-grid { grid-template-columns:repeat(4,1fr); gap:22px; }
 }
 
 /* ── Custom date picker ── */
@@ -1160,8 +1200,9 @@ body[data-view="review"] .child-tag-dot {
 }
 /* Review hero dashboard strip */
 .view-hero-review {
-  display:flex; align-items:center; justify-content:space-around; flex-wrap:wrap; gap:12px;
-  margin-bottom:22px; padding:16px 20px; border-radius:var(--r-l);
+  display:grid; grid-template-columns:1fr auto 1fr auto 1fr;
+  align-items:center; gap:0;
+  margin-bottom:20px; padding:14px 16px; border-radius:var(--r-l);
   background:linear-gradient(135deg, rgba(0,80,200,.09) 0%, rgba(0,140,210,.04) 100%);
   border:1px solid rgba(0,100,200,.16);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
@@ -2024,33 +2065,138 @@ def get():
     rows = sb.table("expenses").select("*").order("created_at", desc=True).execute().data or []
 
     pending_count = sum(1 for r in rows if r.get("status") == "Pending")
+    ack_count     = sum(1 for r in rows if r.get("status") == "Acknowledged")
 
     if rows:
-        df = pl.DataFrame([{"category": r["category"], "amount": float(r["amount"])} for r in rows])
-        summary = df.group_by("category").agg(pl.col("amount").sum().alias("total")).sort("total", descending=True)
-        grand   = df["amount"].sum()
-        stats   = Div(
-            *[
-                Div(
-                    Span(CATEGORIES.get(r["category"], "📎"), cls="stat-icon"),
-                    P(r["category"], cls="stat-label"),
-                    P(f"${r['total']:,.2f}", cls="stat-value"),
-                    cls="glass stat-item",
-                )
-                for r in summary.to_dicts()
-            ],
-            Div(
-                Span("💰", cls="stat-icon"),
-                P("Grand Total", cls="stat-label"),
-                P(f"${grand:,.2f}", cls="stat-value stat-total"),
-                cls="glass stat-item",
-            ),
-            cls="stats-bar",
-        )
+        df = pl.DataFrame([{
+            "category": r["category"],
+            "amount":   float(r["amount"]),
+            "child":    r.get("child") or "Unknown",
+            "status":   r.get("status", "Pending"),
+            "month":    str(r.get("date", ""))[:7],
+        } for r in rows])
+
+        grand    = df["amount"].sum()
+        avg_amt  = grand / len(rows)
         grand_fmt = f"${grand:,.2f}"
+
+        # Category breakdown
+        cat_df = df.group_by("category").agg(
+            pl.col("amount").sum().alias("total"),
+            pl.col("amount").len().alias("count"),
+        ).sort("total", descending=True)
+
+        # Child breakdown
+        child_df = df.group_by("child").agg(
+            pl.col("amount").sum().alias("total"),
+            pl.col("amount").len().alias("count"),
+        ).sort("total", descending=True)
+
+        # Monthly trend
+        month_df = df.group_by("month").agg(
+            pl.col("amount").sum().alias("total"),
+        ).sort("month")
+        month_max = month_df["total"].max() or 1
+
+        ack_pct   = round(ack_count / len(rows) * 100) if rows else 0
+        month_rows = month_df.to_dicts()
+
+        import json
+        chart_data = json.dumps({
+            "monthly":    {"labels": [r["month"][5:] for r in month_rows],
+                           "amounts": [round(r["total"], 2) for r in month_rows]},
+            "categories": {"labels": [r["category"] for r in cat_df.to_dicts()],
+                           "icons":  [CATEGORIES.get(r["category"], "📎") for r in cat_df.to_dicts()],
+                           "amounts": [round(r["total"], 2) for r in cat_df.to_dicts()],
+                           "counts":  [r["count"] for r in cat_df.to_dicts()]},
+            "children":   {"labels": [r["child"] for r in child_df.to_dicts()],
+                           "amounts": [round(r["total"], 2) for r in child_df.to_dicts()]},
+            "status":     {"acknowledged": ack_count, "pending": pending_count},
+        })
+
+        ack_pct   = round(ack_count / len(rows) * 100) if rows else 0
+
+        # ── KPI cards (Overview tab) ──
+        kpi_section = Div(
+            Div(Span("📋", cls="kpi-icon"), Div(str(len(rows)),      cls="kpi-val teal"),  Div("Total Entries",  cls="kpi-label"), cls="kpi-card"),
+            Div(Span("⏳", cls="kpi-icon"), Div(str(pending_count),  cls="kpi-val amber"), Div("Pending",        cls="kpi-label"), cls="kpi-card"),
+            Div(Span("✅", cls="kpi-icon"), Div(str(ack_count),      cls="kpi-val green"), Div("Acknowledged",   cls="kpi-label"), Div(f"{ack_pct}% done", cls="kpi-sub"), cls="kpi-card"),
+            Div(Span("💰", cls="kpi-icon"), Div(f"${avg_amt:,.2f}",  cls="kpi-val blue"),  Div("Avg per Expense",cls="kpi-label"), cls="kpi-card"),
+            cls="kpi-row",
+        )
+
+        # ── Chart canvases (Analytics tab, lazy-init on first open) ──
+        charts_section = Div(
+            Div(
+                Div(Div("📅 Monthly Spending", Span("— per month"), cls="chart-title"),
+                    NotStr('<canvas id="monthChart"></canvas>'), cls="chart-card"),
+                Div(Div("⚖️ Status", Span(f"— {ack_pct}% done"), cls="chart-title"),
+                    NotStr('<canvas id="statusChart" style="max-height:220px"></canvas>'), cls="chart-card"),
+                cls="chart-row chart-row-2",
+            ),
+            Div(
+                Div(Div("🏷 By Category", Span("— total spend"), cls="chart-title"),
+                    NotStr('<canvas id="catChart"></canvas>'), cls="chart-card"),
+                Div(Div("👧 By Child", Span("— total spend"), cls="chart-title"),
+                    NotStr('<canvas id="childChart"></canvas>'), cls="chart-card"),
+                cls="chart-row chart-row-2",
+            ),
+            cls="dash",
+        )
+
+        chartjs_data   = chart_data
+        chartjs_script = Script(f"""
+window._chartData = {chartjs_data};
+window._chartsReady = false;
+function initDashCharts(){{
+  if(window._chartsReady) return;
+  if(typeof Chart==='undefined'){{ setTimeout(initDashCharts,100); return; }}
+  window._chartsReady = true;
+  const D=window._chartData;
+  const teal='#00C4B4',jade='#00A896',amber='rgba(255,180,0,.85)',blue='#00C4E8';
+  const t2='rgba(122,154,173,.7)',grid='rgba(255,255,255,.05)';
+  const fmt=v=>'$'+v.toLocaleString('en-US',{{minimumFractionDigits:2,maximumFractionDigits:2}});
+  Chart.defaults.color=t2; Chart.defaults.font.family='system-ui,sans-serif';
+  new Chart(document.getElementById('monthChart'),{{type:'bar',
+    data:{{labels:D.monthly.labels,datasets:[{{label:'Spend',data:D.monthly.amounts,
+      backgroundColor:'rgba(0,196,180,.22)',borderColor:teal,borderWidth:2,
+      borderRadius:8,borderSkipped:false,hoverBackgroundColor:'rgba(0,196,180,.42)'}}]}},
+    options:{{responsive:true,plugins:{{legend:{{display:false}},tooltip:{{callbacks:{{label:c=>fmt(c.raw)}}}}}},
+      scales:{{y:{{ticks:{{callback:v=>'$'+v,color:t2}},grid:{{color:grid}}}},x:{{ticks:{{color:t2}},grid:{{display:false}}}}}}}}
+  }});
+  new Chart(document.getElementById('statusChart'),{{type:'doughnut',
+    data:{{labels:['Acknowledged','Pending'],datasets:[{{data:[D.status.acknowledged,D.status.pending],
+      backgroundColor:[jade,amber],borderWidth:0,hoverOffset:8}}]}},
+    options:{{responsive:true,cutout:'70%',plugins:{{
+      legend:{{position:'bottom',labels:{{padding:16,usePointStyle:true}}}},
+      tooltip:{{callbacks:{{label:c=>c.label+': '+c.raw}}}}}}}}
+  }});
+  new Chart(document.getElementById('catChart'),{{type:'bar',
+    data:{{labels:D.categories.labels,datasets:[{{label:'Amount',data:D.categories.amounts,
+      backgroundColor:'rgba(0,168,150,.28)',borderColor:jade,borderWidth:2,
+      borderRadius:6,hoverBackgroundColor:'rgba(0,168,150,.48)'}}]}},
+    options:{{indexAxis:'y',responsive:true,plugins:{{legend:{{display:false}},
+      tooltip:{{callbacks:{{label:c=>fmt(c.raw)+' ('+D.categories.counts[c.dataIndex]+'x)'}}}}}},
+      scales:{{x:{{ticks:{{callback:v=>'$'+v,color:t2}},grid:{{color:grid}}}},y:{{ticks:{{color:t2}},grid:{{display:false}}}}}}}}
+  }});
+  new Chart(document.getElementById('childChart'),{{type:'bar',
+    data:{{labels:D.children.labels,datasets:[{{label:'Amount',data:D.children.amounts,
+      backgroundColor:'rgba(0,196,232,.22)',borderColor:blue,borderWidth:2,
+      borderRadius:6,hoverBackgroundColor:'rgba(0,196,232,.42)'}}]}},
+    options:{{indexAxis:'y',responsive:true,plugins:{{legend:{{display:false}},
+      tooltip:{{callbacks:{{label:c=>fmt(c.raw)}}}}}},
+      scales:{{x:{{ticks:{{callback:v=>'$'+v,color:t2}},grid:{{color:grid}}}},y:{{ticks:{{color:t2}},grid:{{display:false}}}}}}}}
+  }});
+}}
+""")
+        stats = ""
+
     else:
-        stats     = ""
-        grand_fmt = "$0.00"
+        kpi_section    = ""
+        charts_section = ""
+        chartjs_script = NotStr("")
+        stats          = ""
+        grand_fmt      = "$0.00"
 
     hero_review = Div(
         Div(
@@ -2155,10 +2301,28 @@ def get():
             cls="back-nav",
         ),
         hero_review,
-        H1("Expense Review"),
-        P("Audit and acknowledge submitted receipts.", cls="subtitle"),
-        stats,
-        feed,
+        Script(src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"),
+        chartjs_script,
+        Div(
+            Button("📊 Dashboard", cls="tab-btn active", **{"data-tab": "dashboard"}),
+            Button("🧾 Feed",      cls="tab-btn",        **{"data-tab": "feed"}),
+            cls="tab-bar",
+        ),
+        Div(kpi_section, charts_section, id="panel-dashboard", cls="tab-panel active"),
+        Div(feed,                        id="panel-feed",       cls="tab-panel"),
+        Script("""
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab)?.classList.add('active');
+    if (btn.dataset.tab === 'dashboard') initDashCharts();
+  });
+});
+// Init charts on page load since dashboard is the default tab
+document.addEventListener('DOMContentLoaded', () => initDashCharts());
+"""),
         *detail_modal(),
         view="review",
     ))
